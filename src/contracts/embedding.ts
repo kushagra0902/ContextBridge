@@ -1,11 +1,9 @@
 import type {
   ChunkId,
   MemoryId,
-  ProjectId,
-  SessionId,
   VectorId,
-  WorkstreamId,
 } from "./ids.js";
+import type { ScopeAddress } from "./scope.js";
 
 export type EmbeddingSpaceId = string; // similar dimension and compatible vectors in same space so that can be compared.
 export type EmbeddingJobId = string; 
@@ -76,11 +74,7 @@ export interface EmbeddingJob {
   readonly updatedAt: string;
 }
 
-export interface VectorScopeMetadata {
-  readonly projectId: ProjectId;
-  readonly workstreamId?: WorkstreamId;
-  readonly sessionId?: SessionId;
-}
+export type VectorScopeMetadata = ScopeAddress;
 
 export interface VectorRow {
   readonly id: VectorId;

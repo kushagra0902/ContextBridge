@@ -7,7 +7,7 @@ need them strongly typed so that we can have type safety when using them.
 can be serialized to string and deserialized from string.
 */
 
-import { createHash } from "crypto";
+import { createHash } from "node:crypto";
 
 type Brand<T, TBrand extends string> = T & {
   readonly __brand: TBrand;
