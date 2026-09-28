@@ -25,7 +25,7 @@ export type CanonicalEventKind =
   | "tool_result";
 
 // defines from where the event came
-interface EvidenceSource {
+export interface EvidenceSource {
   sourceId: SourceId;
   sourceOrdinal: number;
   byteStart?: number;
@@ -34,14 +34,14 @@ interface EvidenceSource {
 }
 
 // tells the reason why a particular info was omitted from the message
-interface RedactionSpan {
+export interface RedactionSpan {
   start: number;
   end: number;
   reason: "secret" | "credential" | "user_rule" | "policy";
 }
 
 // Event description
-interface CanonicalEvent {
+export interface CanonicalEvent {
   id: EventId;
   sessionId: SessionId;
   ordinal: number; // number of the event
@@ -55,21 +55,21 @@ interface CanonicalEvent {
 }
 
 // specifies the reason for omission of specific chunks
-type OmissionReason =
+export type OmissionReason =
   | "output_limit"
   | "repetitive_output"
   | "policy"
   | "unsupported_content";
 
 // Marker of the omission chunks
-interface OmissionMarker {
+export interface OmissionMarker {
   eventId: EventId;
   reason: OmissionReason;
   omittedCharacters?: number;
 }
 
 // Defines the scope of evidence, from where the evidence was collected
-interface EvidenceScope {
+export interface EvidenceScope {
   sessionId: SessionId;
   projectId?: ProjectId;
   workstreamId?: WorkstreamId;
@@ -77,7 +77,7 @@ interface EvidenceScope {
 
 // Represents the combination of events together to form a single chunk
 // gives opportunity for searching in combined manner.
-interface EvidenceChunk {
+export interface EvidenceChunk {
   id: ChunkId;
   scope: EvidenceScope;
   eventIds: readonly EventId[];
