@@ -49,6 +49,22 @@ export interface SourceCursor {
   readonly lastCompleteLineHash?: string; // this is for checking the file in case the model truncated the file, edited the file or changed the content of the same file. Then the whole file needs re parsing. 
 }
 
+export type SourceReadDiagnosticCode =
+  | "MALFORMED_JSON"
+  | "INVALID_RECORD"
+  | "INVALID_UTF8"
+  | "OVERSIZED_RECORD"
+  | "CURSOR_RESET_ROTATED"
+  | "CURSOR_RESET_TRUNCATED"
+  | "CURSOR_RESET_MISMATCH";
+
+/** Safe read diagnostics never contain the source line or transcript text. */
+export interface SourceReadDiagnostic {
+  readonly code: SourceReadDiagnosticCode;
+  readonly byteStart: number;
+  readonly byteEnd: number;
+}
+
 /**
  * Limits how much a source adapter may read during one batch.
  *
@@ -84,6 +100,8 @@ export interface SourceBatch {
   readonly source: SourceRef;
 
   readonly records: readonly SourceRecord[];
+
+  readonly diagnostics: readonly SourceReadDiagnostic[];
 
   // the cursor updated to; if the batch is successfully committed. Not just read
   readonly proposedCursor: SourceCursor;
@@ -131,7 +149,5 @@ export interface SourceAdapter {
    * Zero events is valid when the record is intentionally ignored,
    * such as internal reasoning or unsupported metadata.
    */
-  normalize(
-    record: SourceRecord,
-  ): readonly CanonicalEvent[];
+  normalize(record: SourceRecord): Promise<readonly CanonicalEvent[]>;
 }

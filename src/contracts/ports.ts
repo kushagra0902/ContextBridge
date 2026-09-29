@@ -41,6 +41,7 @@ import type {
   ScopeAlias,
   ScopeCandidate,
   ScopeExclusion,
+  ScopeAvailability,
   ScopeRef,
 } from "./scope.js";
 
@@ -117,6 +118,7 @@ export interface ScopeRepository {
     sessionId?: SessionId,
   ): Promise<readonly ExplicitScopeMapping[]>;
   getExclusion(scope: ScopeAddress): Promise<ScopeExclusion | undefined>;
+  getAvailability(scope: ScopeAddress): Promise<ScopeAvailability>;
   upsertScopes(scopes: readonly ScopeRef[]): Promise<void>;
   upsertAliases(aliases: readonly ScopeAlias[]): Promise<void>;
   upsertExplicitMappings(
@@ -234,7 +236,7 @@ export interface AuthorizationPolicy {
 }
 
 export interface OutputPolicy {
-  sanitizeText(text: string): string;
+  sanitizeText(text: string): Promise<string>;
   assertWithinBudget(text: string, budget: SearchBudget): void;
 }
 
