@@ -1,6 +1,11 @@
 // This is a worker node that runs the regex acc to the rules provided and
 // And it it gives the span of redaction to the main file
-// who then actually redacts the text.
+// who then actually redacts the text. 
+// This specifically handles the arbitrary user given regexes other thatn the main engine.
+// The main engine keeps on executing in the main process.
+
+// The main reason is user defined explicit rule can be broken. 
+// If used in the main process itself, it can result in timeouts and unnecessary
 
 import { parentPort, workerData } from "node:worker_threads";
 
