@@ -14,6 +14,7 @@ import type {
   ScopeCandidate,
   ScopeExclusion,
   ScopeRef,
+  SessionRef,
 } from "../../../contracts/scope.js";
 
 import type { SqliteDatabase, SqliteRow } from "../database.js";
@@ -38,6 +39,10 @@ export class SqliteScopeRepository implements ScopeRepository {
 
   get(scope: ScopeAddress): Promise<ScopeRef | undefined> {
     return this.executor.execute("scopes.get", scope);
+  }
+
+  getSession(sessionId: SessionId): Promise<SessionRef | undefined> {
+    return this.executor.execute("scopes.getSession", sessionId);
   }
 
   listCandidates(
@@ -106,6 +111,8 @@ export function handleProjectsOperation(
   switch (operation) {
     case "scopes.get":
       return getScope(database, argument as ScopeAddress);
+    case "scopes.getSession":
+      return getSession(database, argument as SessionId);
     case "scopes.listCandidates": {
       const input = argument as { query?: string; limit: number };
       return listCandidates(database, input.query, input.limit);
@@ -137,6 +144,18 @@ export function handleProjectsOperation(
     default:
       throw new Error(`Unknown scope repository operation: ${operation}`);
   }
+}
+
+export function getSession(
+  database: SqliteDatabase,
+  sessionId: SessionId,
+): SessionRef | undefined {
+  const row = database
+    .prepare("SELECT record_json FROM sessions WHERE session_id = ?")
+    .get(sessionId) as SqliteRow | undefined;
+  return row === undefined
+    ? undefined
+    : parseJson<SessionRef>(requiredString(row, "record_json"), "session scope");
 }
 
 export function getScope(
@@ -542,4 +561,3 @@ function validateLimit(limit: number): void {
 function escapeLike(value: string): string {
   return value.replace(/[\\%_]/gu, "\\$&");
 }
-

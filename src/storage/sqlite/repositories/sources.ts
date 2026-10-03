@@ -132,10 +132,14 @@ export function getCursor(
 export function writeCursor(
   database: SqliteDatabase,
   cursor: SourceCursor,
-  now = new Date().toISOString(),
+  options: {
+    readonly now?: string;
+    readonly allowBackward?: boolean;
+  } = {},
 ): void {
   const current = getCursor(database, cursor.sourceId);
   if (
+    options.allowBackward !== true &&
     current !== undefined &&
     current.fileFingerprint === cursor.fileFingerprint &&
     cursor.committedByteOffset < current.committedByteOffset
@@ -160,7 +164,7 @@ export function writeCursor(
       cursor.fileFingerprint,
       cursor.committedByteOffset,
       cursor.lastCompleteLineHash ?? null,
-      now,
+      options.now ?? new Date().toISOString(),
     );
 }
 
@@ -177,4 +181,3 @@ function validateSource(source: SourceRef): void {
     throw new TypeError("Invalid source path");
   }
 }
-
