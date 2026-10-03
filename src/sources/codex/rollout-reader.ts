@@ -54,8 +54,11 @@ export class CodexSourceReadError extends Error {
 
 const MAX_READ_BYTES = 64 * 1_024 * 1_024;
 const MAX_LINES = 10_000;
-const CURSOR_VALIDATION_BYTES = 4 * 1_024 * 1_024;
 const OVERSIZED_LINE_SCAN_BYTES = 16 * 1_024 * 1_024;
+// A line accepted by skipOversizedLine must also be fully hashable when the
+// next batch validates its cursor. Keeping these limits identical prevents a
+// valid oversized-line cursor from being falsely reset to byte zero.
+const CURSOR_VALIDATION_BYTES = OVERSIZED_LINE_SCAN_BYTES;
 const SCAN_CHUNK_BYTES = 64 * 1_024;
 
 /**
@@ -208,8 +211,12 @@ export async function readCompleteLines(
     }
 
     const reachedPhysicalEnd = offset + bytesRead >= fileIdentity.size;
+    const reachedRecordLimit =
+      lineBreaks.length === maxLines && nextByteOffset < offset + bytesRead;
     const pendingPartialLine =
-      reachedPhysicalEnd && nextByteOffset < fileIdentity.size;
+      reachedPhysicalEnd &&
+      nextByteOffset < fileIdentity.size &&
+      !reachedRecordLimit;
     return {
       lines,
       diagnostics,
@@ -217,7 +224,9 @@ export async function readCompleteLines(
       fileFingerprint,
       nextByteOffset,
       ...(lastCompleteLineHash === undefined ? {} : { lastCompleteLineHash }),
-      hasMore: !pendingPartialLine && nextByteOffset < fileIdentity.size,
+      hasMore:
+        reachedRecordLimit ||
+        (!pendingPartialLine && nextByteOffset < fileIdentity.size),
       pendingPartialLine,
     };
   } finally {

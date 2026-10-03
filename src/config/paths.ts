@@ -263,6 +263,9 @@ export async function ensurePrivateDirectories(
   return results;
 }
 
+// Makes a directory private by changing the perms to 0700
+// ie the current user can access the directory
+// but any other user or group of user cannot do so.
 export async function ensurePrivateDirectory(
   directory: string,
   platform: NodeJS.Platform = currentPlatform(),

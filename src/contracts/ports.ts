@@ -43,6 +43,7 @@ import type {
   ScopeExclusion,
   ScopeAvailability,
   ScopeRef,
+  SessionRef,
 } from "./scope.js";
 
 import type { SourceCursor, SourceRef } from "./source.js";
@@ -69,6 +70,14 @@ export interface CommitResult {
   readonly committedCursor: SourceCursor;
 }
 
+export interface CommitBatchOptions {
+  /**
+   * Replay permits a verified rotation/truncation scan to replace the cursor
+   * with an earlier offset. Normal append commits remain strictly monotonic.
+   */
+  readonly cursorMode?: "append" | "replay";
+}
+
 export interface SourceStateRepository {
   listSources(): Promise<readonly SourceRef[]>;
   upsertSources(sources: readonly SourceRef[]): Promise<void>;
@@ -80,6 +89,7 @@ export interface EvidenceRepository {
   commitBatch(
     batch: CanonicalBatch,
     nextCursor: SourceCursor,
+    options?: CommitBatchOptions,
   ): Promise<CommitResult>;
   getEvents(ids: readonly EventId[]): Promise<readonly CanonicalEvent[]>;
   getChunks(ids: readonly ChunkId[]): Promise<readonly EvidenceChunk[]>;
@@ -106,6 +116,7 @@ export interface MemoryRepository {
 
 export interface ScopeRepository {
   get(scope: ScopeAddress): Promise<ScopeRef | undefined>;
+  getSession(sessionId: SessionId): Promise<SessionRef | undefined>;
   listCandidates(
     query: string | undefined,
     limit: number,
@@ -161,6 +172,9 @@ export interface LexicalSearchRepository {
 }
 
 export interface EmbeddingJobRepository {
+  upsertSpace(space: EmbeddingSpace): Promise<void>;
+  getSpace(spaceId: EmbeddingSpace["id"]): Promise<EmbeddingSpace | undefined>;
+  getActiveSpace(): Promise<EmbeddingSpace | undefined>;
   enqueue(jobs: readonly EmbeddingJob[]): Promise<void>;
   claim(input: EmbeddingJobClaim): Promise<readonly EmbeddingJob[]>;
   requeueExpiredLeases(now: Date): Promise<number>;
