@@ -1,0 +1,15 @@
+[Unit]
+Description=Context Bridge local MCP service
+After=default.target
+
+[Service]
+Type=simple
+ExecStart={{NODE}} {{CLI}} serve --foreground --config {{CONFIG}}
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0077
+
+[Install]
+WantedBy=default.target
