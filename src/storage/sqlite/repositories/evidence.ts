@@ -49,6 +49,16 @@ export class SqliteEvidenceRepository implements EvidenceRepository {
     return this.executor.execute("evidence.getChunks", ids);
   }
 
+  listSessionChunks(
+    sessionId: SessionId,
+    limit: number,
+  ): Promise<readonly EvidenceChunk[]> {
+    return this.executor.execute("evidence.listSessionChunks", {
+      sessionId,
+      limit,
+    });
+  }
+
   listSessionEvents(
     sessionId: SessionId,
     afterOrdinal: number | undefined,
@@ -90,6 +100,10 @@ export function handleEvidenceOperation(
       return getEvents(database, argument as readonly EventId[]);
     case "evidence.getChunks":
       return getChunks(database, argument as readonly ChunkId[]);
+    case "evidence.listSessionChunks": {
+      const input = argument as { sessionId: SessionId; limit: number };
+      return listSessionChunks(database, input.sessionId, input.limit);
+    }
     case "evidence.listSessionEvents": {
       const input = argument as {
         sessionId: SessionId;
@@ -267,7 +281,7 @@ export function listSessionEvents(
   afterOrdinal: number | undefined,
   limit: number,
 ): readonly CanonicalEvent[] {
-  enforceLimit(limit, 1, 1_000, "event limit");
+  enforceLimit(limit, 1, 100_000, "event limit");
   if (afterOrdinal !== undefined && (!Number.isSafeInteger(afterOrdinal) || afterOrdinal < 0)) {
     throw new RangeError("Invalid event ordinal");
   }
@@ -297,6 +311,34 @@ export function listSessionEvents(
     ) as SqliteRow[];
   return rows.map((row) =>
     parseJson<CanonicalEvent>(requiredString(row, "record_json"), "event"),
+  );
+}
+
+export function listSessionChunks(
+  database: SqliteDatabase,
+  sessionId: SessionId,
+  limit: number,
+): readonly EvidenceChunk[] {
+  enforceLimit(limit, 1, 100_000, "chunk limit");
+  const rows = database
+    .prepare(`
+      SELECT chunks.record_json
+      FROM chunks
+      WHERE chunks.session_id = ?
+        AND (
+          chunks.project_id IS NULL OR NOT EXISTS (
+            SELECT 1 FROM exclusions AS blocked
+            WHERE blocked.project_id = chunks.project_id
+              AND (blocked.workstream_id IS NULL OR blocked.workstream_id = chunks.workstream_id)
+              AND (blocked.session_id IS NULL OR blocked.session_id = chunks.session_id)
+          )
+        )
+      ORDER BY chunks.sequence, chunks.chunk_id
+      LIMIT ?
+    `)
+    .all(sessionId, limit) as SqliteRow[];
+  return rows.map((row) =>
+    parseJson<EvidenceChunk>(requiredString(row, "record_json"), "chunk"),
   );
 }
 
@@ -336,13 +378,15 @@ export function getEventNeighborhood(
     }
   }
 
-  return [...found.values()]
+  const ordered = [...found.values()]
     .sort((left, right) =>
       left.sessionId === right.sessionId
         ? left.ordinal - right.ordinal || left.id.localeCompare(right.id)
         : left.sessionId.localeCompare(right.sessionId),
     )
     .slice(0, limit);
+  // Re-hydrate through the tombstone-aware path immediately before return.
+  return getEvents(database, ordered.map((event) => event.id));
 }
 
 function validateEvent(event: CanonicalEvent, batch: CanonicalBatch): void {

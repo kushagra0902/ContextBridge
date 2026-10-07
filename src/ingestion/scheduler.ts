@@ -24,6 +24,7 @@ import {
 } from "./reconcile-sources.js";
 
 import { scanOnce } from "./scan.js";
+import type { SessionTitleMetadata } from "./scan.js";
 import {
   resolveProject,
   type SessionProjectMetadata,
@@ -101,6 +102,7 @@ export class IngestionScheduler {
   private readonly now: () => Date;
   private readonly failures = new Map<SourceId, FailureState>();
   private readonly sessionMetadata = new Map<SessionId, SessionProjectMetadata>();
+  private readonly sessionTitles = new Map<SessionId, SessionTitleMetadata>();
   private readonly sessionScopes = new Map<SessionId, SessionRef | null>();
 
   constructor(options: IngestionSchedulerOptions) {
@@ -196,6 +198,15 @@ export class IngestionScheduler {
         );
         for (const metadata of scan.sessionMetadata) {
           this.sessionMetadata.set(metadata.sessionId, metadata);
+        }
+        for (const title of scan.sessionTitles) {
+          this.sessionTitles.set(title.sessionId, title);
+          const existing = await this.storage.scopes.getSession(title.sessionId);
+          if (existing !== undefined && existing.title !== title.title) {
+            const updated = { ...existing, title: title.title };
+            await this.storage.scopes.upsertScopes([updated]);
+            this.sessionScopes.set(title.sessionId, updated);
+          }
         }
         const scoped = await this.filterEventsByScope(scan.events);
         const committed = await commitIngestBatch(this.storage.evidence, {
@@ -298,6 +309,7 @@ export class IngestionScheduler {
     }
 
     const target = resolution.mapping.target;
+    const sessionTitle = this.sessionTitles.get(sessionId)?.title;
     const activity = observedRange(
       events.filter((event) => event.sessionId === sessionId),
     );
@@ -327,6 +339,7 @@ export class IngestionScheduler {
       ...(metadata.git?.commitHash === undefined
         ? {}
         : { headCommit: metadata.git.commitHash }),
+      ...(sessionTitle === undefined ? {} : { title: sessionTitle }),
       ...(activity.first === undefined ? {} : { startedAt: activity.first }),
       ...(activity.last === undefined ? {} : { lastActivityAt: activity.last }),
     };

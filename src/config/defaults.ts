@@ -32,6 +32,13 @@ export const DEFAULT_CONFIG = {
     overviewMaxTokens: 3_000,
     evidenceMaxTokens: 5_000,
   },
+  runtime: {
+    host: "127.0.0.1",
+    port: 3847,
+    maxRequestBytes: 1 * MIB,
+    maxConcurrentRequests: 16,
+    shutdownGraceMs: 15_000,
+  },
   embeddings: {
     enabled: false,
     provider: "local_transformers",
@@ -45,4 +52,3 @@ export const DEFAULT_CONFIG = {
     optimizeAfterWrites: 10_000,
   },
 } as const;
-

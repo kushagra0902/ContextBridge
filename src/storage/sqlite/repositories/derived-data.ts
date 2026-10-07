@@ -92,11 +92,12 @@ function upsertChunk(database: SqliteDatabase, chunk: EvidenceChunk): void {
   database
     .prepare(`
       INSERT INTO chunks(
-        chunk_id, project_id, workstream_id, session_id, display_text,
+        chunk_id, sequence, project_id, workstream_id, session_id, display_text,
         embedding_text, token_count, fingerprint, observed_from,
         observed_to, record_json
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(chunk_id) DO UPDATE SET
+        sequence = excluded.sequence,
         project_id = excluded.project_id,
         workstream_id = excluded.workstream_id,
         session_id = excluded.session_id,
@@ -110,6 +111,7 @@ function upsertChunk(database: SqliteDatabase, chunk: EvidenceChunk): void {
     `)
     .run(
       chunk.id,
+      chunk.sequence,
       chunk.scope.projectId ?? null,
       chunk.scope.workstreamId ?? null,
       chunk.scope.sessionId,

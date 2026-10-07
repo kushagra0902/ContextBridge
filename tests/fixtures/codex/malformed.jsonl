@@ -1,0 +1,2 @@
+{"type":"response_item","payload":
+{"timestamp":"2026-01-02T03:04:05.000Z","type":"response_item","ordinal":1,"payload":{"type":"message","id":"valid-after-error","role":"assistant","content":[{"type":"output_text","text":"Safe record after malformed input"}]}}

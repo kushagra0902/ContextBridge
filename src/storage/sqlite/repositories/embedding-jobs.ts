@@ -430,12 +430,20 @@ export function getEmbeddingRecords(
   if (entities.length > 1_000) {
     throw new RangeError("At most 1000 embedding records can be read at once");
   }
-  const clauses = entities.map(() => "(entity_kind = ? AND entity_id = ?)").join(" OR ");
+  const clauses = entities
+    .map(() => "(embedding_records.entity_kind = ? AND embedding_records.entity_id = ?)")
+    .join(" OR ");
   const parameters = entities.flatMap((entity) => [entity.kind, entity.id]);
   const rows = database
     .prepare(`
-      SELECT * FROM embedding_records
-      WHERE space_id = ? AND (${clauses})
+      SELECT embedding_records.* FROM embedding_records
+      JOIN embedding_desires
+        ON embedding_desires.entity_kind = embedding_records.entity_kind
+       AND embedding_desires.entity_id = embedding_records.entity_id
+       AND embedding_desires.space_id = embedding_records.space_id
+       AND embedding_desires.operation = 'upsert'
+       AND embedding_desires.desired_fingerprint = embedding_records.fingerprint
+      WHERE embedding_records.space_id = ? AND (${clauses})
     `)
     .all(spaceId, ...parameters) as SqliteRow[];
   const byEntity = new Map(

@@ -138,6 +138,29 @@ const retrievalSchema = z.strictObject({
     .default(DEFAULT_CONFIG.retrieval.evidenceMaxTokens),
 });
 
+const runtimeSchema = z.strictObject({
+  host: z.literal("127.0.0.1").default(DEFAULT_CONFIG.runtime.host),
+  port: z.number().int().min(1).max(65_535).default(DEFAULT_CONFIG.runtime.port),
+  maxRequestBytes: z
+    .number()
+    .int()
+    .min(4_096)
+    .max(8 * 1_024 * 1_024)
+    .default(DEFAULT_CONFIG.runtime.maxRequestBytes),
+  maxConcurrentRequests: z
+    .number()
+    .int()
+    .min(1)
+    .max(256)
+    .default(DEFAULT_CONFIG.runtime.maxConcurrentRequests),
+  shutdownGraceMs: z
+    .number()
+    .int()
+    .min(1_000)
+    .max(120_000)
+    .default(DEFAULT_CONFIG.runtime.shutdownGraceMs),
+});
+
 const httpsUrlSchema = z.string().url().refine(
   (value) => {
     try {
@@ -257,6 +280,7 @@ export const contextBridgeConfigSchema = z
     storage: storageSchema.default({ ...DEFAULT_CONFIG.storage }),
     processing: processingSchema.default({ ...DEFAULT_CONFIG.processing }),
     retrieval: retrievalSchema.default({ ...DEFAULT_CONFIG.retrieval }),
+    runtime: runtimeSchema.default({ ...DEFAULT_CONFIG.runtime }),
     embeddings: embeddingsSchema.default({ ...DEFAULT_CONFIG.embeddings }),
     vector: vectorSchema.default({ ...DEFAULT_CONFIG.vector }),
   })

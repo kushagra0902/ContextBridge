@@ -79,6 +79,7 @@ export interface EvidenceScope {
 // gives opportunity for searching in combined manner.
 export interface EvidenceChunk {
   id: ChunkId;
+  sequence: number; // deterministic position within the session's derived chunk stream
   scope: EvidenceScope;
   eventIds: readonly EventId[];
   displayText: string; // raw display text of the EvidentChunk
@@ -89,7 +90,6 @@ export interface EvidenceChunk {
   observedFrom?: string; // represents the time of latest and first evidences contained in this.
   observedTo?: string;
 }
-
 
 
 

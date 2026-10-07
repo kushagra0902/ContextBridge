@@ -93,6 +93,10 @@ export interface EvidenceRepository {
   ): Promise<CommitResult>;
   getEvents(ids: readonly EventId[]): Promise<readonly CanonicalEvent[]>;
   getChunks(ids: readonly ChunkId[]): Promise<readonly EvidenceChunk[]>;
+  listSessionChunks(
+    sessionId: SessionId,
+    limit: number,
+  ): Promise<readonly EvidenceChunk[]>;
   listSessionEvents(
     sessionId: SessionId,
     afterOrdinal: number | undefined,

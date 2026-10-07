@@ -45,6 +45,11 @@ export const MIGRATIONS: readonly Migration[] = [
     name: "initial",
     source: new URL("./migrations/001_initial.sql", import.meta.url),
   },
+  {
+    version: 2,
+    name: "chunk_sequence",
+    source: new URL("./migrations/002_chunk_sequence.sql", import.meta.url),
+  },
 ];
 
 

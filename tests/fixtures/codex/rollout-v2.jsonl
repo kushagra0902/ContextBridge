@@ -1,0 +1,7 @@
+{"timestamp":"2026-09-02T03:04:05.000Z","type":"session_meta","ordinal":0,"payload":{"id":"33333333-3333-4333-8333-333333333333","session_id":"33333333-3333-4333-8333-333333333333","cwd":"/synthetic/project","context_window":100000,"thread_source":"synthetic"}}
+{"timestamp":"2026-09-02T03:04:06.000Z","type":"response_item","ordinal":1,"payload":{"type":"message","id":"msg-v2-user","role":"user","content":[{"type":"input_text","text":"Describe the synthetic image"},{"type":"input_image","image_url":"data:image/png;base64,synthetic","detail":"low"}]}}
+{"timestamp":"2026-09-02T03:04:07.000Z","type":"response_item","ordinal":2,"payload":{"type":"custom_tool_call","id":"custom-call-item","name":"example_tool","input":"{\"value\":1}","call_id":"custom-call-1","status":"completed"}}
+{"timestamp":"2026-09-02T03:04:08.000Z","type":"response_item","ordinal":3,"payload":{"type":"custom_tool_call_output","id":"custom-result-item","call_id":"custom-call-1","output":"custom synthetic result"}}
+{"timestamp":"2026-09-02T03:04:09.000Z","type":"event_msg","ordinal":4,"payload":{"type":"item_completed","item":{"type":"DynamicToolCall","id":"custom-call-item","tool":"example_tool","arguments":"{\"value\":1}","status":"completed"}}}
+{"timestamp":"2026-09-02T03:04:10.000Z","type":"token_usage_record","ordinal":5,"payload":{"session_id":"33333333-3333-4333-8333-333333333333","usage":{"input_tokens":10}}}
+{"timestamp":"2026-09-02T03:04:11.000Z","type":"world_state","ordinal":6,"payload":{"full":true,"state":{"private":"not evidence"}}}

@@ -1,4 +1,5 @@
 import type { CanonicalEvent } from "../contracts/evidence.js";
+import type { SessionId } from "../contracts/ids.js";
 import type { SessionProjectMetadata } from "../sources/git/project-mapper.js";
 import { isCodexSourcePayload } from "../sources/codex/normalize.js";
 
@@ -28,6 +29,13 @@ export interface IngestScan {
   readonly recordsRead: number;
   readonly duplicatesCollapsed: number;
   readonly sessionMetadata: readonly SessionProjectMetadata[];
+  readonly sessionTitles: readonly SessionTitleMetadata[];
+}
+
+export interface SessionTitleMetadata {
+  readonly sessionId: SessionId;
+  readonly title: string;
+  readonly updatedAt?: string;
 }
 
 export class IngestCursorError extends Error {
@@ -59,6 +67,7 @@ export async function scanOnce(
   }
   const deduped = deduplicateEvents(normalized);
   const sessionMetadata = collectSessionMetadata(batch.records);
+  const sessionTitles = collectSessionTitles(batch.records);
   const transition = decideCursorTransition(
     cursor,
     batch.proposedCursor,
@@ -85,6 +94,7 @@ export async function scanOnce(
     recordsRead: batch.records.length,
     duplicatesCollapsed: deduped.duplicateEvents,
     sessionMetadata,
+    sessionTitles,
   };
 }
 
@@ -106,6 +116,21 @@ function collectSessionMetadata(
       sessionId: payload.sessionId,
       ...(metadata.cwd === undefined ? {} : { cwd: metadata.cwd }),
       ...(metadata.git === undefined ? {} : { git: metadata.git }),
+    });
+  }
+  return [...sessions.values()];
+}
+
+function collectSessionTitles(records: readonly SourceRecord[]): readonly SessionTitleMetadata[] {
+  const sessions = new Map<string, SessionTitleMetadata>();
+  for (const record of records) {
+    if (!isCodexSourcePayload(record.payload)) continue;
+    const payload = record.payload;
+    if (payload.parsed.origin !== "session_index" || payload.parsed.value.title === undefined) continue;
+    sessions.set(payload.sessionId, {
+      sessionId: payload.sessionId,
+      title: payload.parsed.value.title,
+      ...(payload.parsed.value.updatedAt === undefined ? {} : { updatedAt: payload.parsed.value.updatedAt }),
     });
   }
   return [...sessions.values()];
