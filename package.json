@@ -1,0 +1,43 @@
+{
+  "name": "context-bridge",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Local project memory bridge for Codex history",
+  "files": [
+    "dist",
+    "packaging",
+    "README.md"
+  ],
+  "bin": {
+    "context-bridge": "dist/cli/bin.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-sql-migrations.mjs",
+    "prepack": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test",
+    "testing:codex": "npm run build && node scripts/testing/codex-sqlite-roundtrip.mjs",
+    "testing:codex:ingest": "npm run build && node scripts/testing/ingest-codex-sessions.mjs",
+    "testing:codex:query": "npm run build && node scripts/testing/query-codex-sessions.mjs",
+    "testing:mcp:stdio": "npm run build && node scripts/testing/mcp-stdio-smoke.mjs",
+    "testing:mcp:http": "npm run build && node scripts/testing/mcp-http-smoke.mjs",
+    "testing:runtime": "npm run build && node --test tests/integration/runtime-http.test.mjs tests/unit/runtime/runtime.test.mjs",
+    "cli": "npm run build --silent && node dist/cli/bin.js"
+  },
+  "engines": {
+    "node": ">=24 <27"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/node": "^2.1.1",
+    "@modelcontextprotocol/server": "^2.3.0",
+    "@openai/mcp-extensions": "^0.1.0",
+    "smol-toml": "^1.9.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2.3.0",
+    "@types/node": "^26.6.2",
+    "typescript": "^7.0.2"
+  }
+}
